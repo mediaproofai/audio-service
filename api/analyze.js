@@ -1,4 +1,10 @@
 // audio-service/api/analyze.js
+const workerSecret = process.env.WORKER_SECRET;
+const incoming = req.headers["x-worker-secret"];
+
+if (!incoming || incoming !== workerSecret) {
+  return res.status(401).json({ error: "Unauthorized" });
+}
 const fetch = require('node-fetch');
 const fs = require('fs');
 
