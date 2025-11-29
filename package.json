@@ -1,11 +1,6 @@
 {
-  "name": "forensic-service",
+  "name": "audio-service",
   "version": "1.0.0",
-  "type": "module",
-  "engines": {
-    "node": "24.x"
-  },
-  "dependencies": {
-    "@vercel/node": "latest"
-  }
+  "private": true,
+  "dependencies": {}
 }
