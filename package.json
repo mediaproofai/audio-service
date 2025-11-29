@@ -4,7 +4,7 @@
   "description": "MediaProof audio microservice - metadata + heuristics + optional HF inference",
   "main": "api/analyze.js",
   "engines": {
-    "node": "24.x"
+    "node": "18.x"
   },
   "scripts": {
     "start": "node api/analyze.js"
