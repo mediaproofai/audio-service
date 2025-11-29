@@ -2,9 +2,8 @@
   "name": "audio-service",
   "version": "1.0.0",
   "private": true,
-  "type": "module",
-  "scripts": {
-    "start": "node api/analyze.js"
+  "engines": {
+    "node": "18.x"
   },
   "dependencies": {}
 }
