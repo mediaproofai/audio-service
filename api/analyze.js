@@ -1,5 +1,5 @@
 export const config = {
-  runtime: "nodejs20",   // Vercel Latest Stable Runtime
+  runtime: "nodejs",   // <-- FIXED
 };
 
 export default async function handler(req, res) {
@@ -13,7 +13,6 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "imageUrl is required" });
     }
 
-    // ---- Example Forensic Logic (You will later replace with real AI) -----
     const results = {
       forensicScore: Math.random() * 100,
       detectedManipulations: [
