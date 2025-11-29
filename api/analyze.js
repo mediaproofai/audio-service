@@ -4,38 +4,31 @@ export default async function handler(req, res) {
       return res.status(405).json({ error: "Method Not Allowed" });
     }
 
-    const body = await readJson(req);
-    const { audioUrl } = body;
-
+    const { audioUrl } = req.body;
     if (!audioUrl) {
       return res.status(400).json({ error: "audioUrl is required" });
     }
 
-    return res.status(200).json({
-      success: true,
-      analysis: {
-        audioQualityScore: Math.random() * 100,
-        detectedIssues: ["noise", "distortion", "frequency anomalies"],
-        audioUrl
-      }
-    });
+    // Example external fetch of audio file
+    const audioResponse = await fetch(audioUrl);
+    if (!audioResponse.ok) {
+      return res.status(400).json({ error: "Unable to fetch audio file" });
+    }
 
-  } catch (error) {
-    console.error("AUDIO ERROR:", error);
+    const arrayBuffer = await audioResponse.arrayBuffer();
+    const audioBuffer = Buffer.from(arrayBuffer);
+
+    // Here you would run analysis / transcribe / detect manipulation
+    // Dummy output for now:
+    const report = {
+      duration: audioBuffer.length,
+      integrityScore: 0.98,
+      manipulationDetected: false
+    };
+
+    return res.status(200).json({ success: true, report });
+  } catch (err) {
+    console.error(err);
     return res.status(500).json({ error: "Internal Server Error" });
   }
-}
-
-function readJson(req) {
-  return new Promise((resolve, reject) => {
-    let data = "";
-    req.on("data", chunk => (data += chunk));
-    req.on("end", () => {
-      try {
-        resolve(JSON.parse(data));
-      } catch (e) {
-        reject(e);
-      }
-    });
-  });
 }
