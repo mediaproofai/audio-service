@@ -1,6 +1,12 @@
 {
   "name": "audio-service",
   "version": "1.0.0",
-  "private": true,
-  "dependencies": {}
+  "description": "Enterprise audio microservice for MediaProof (Vercel serverless)",
+  "main": "api/analyze.js",
+  "scripts": {
+    "start": "node api/analyze.js"
+  },
+  "engines": {
+    "node": "24.x"
+  }
 }
