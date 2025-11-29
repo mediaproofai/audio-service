@@ -1,17 +1,18 @@
 {
-  "name": "mediaproof-audio-service",
+  "name": "audio-microservice",
   "version": "1.0.0",
-  "description": "MediaProof audio microservice - metadata + heuristics + optional HF inference",
+  "type": "module",
   "main": "api/analyze.js",
-  "engines": {
-    "node": "18.x"
-  },
   "scripts": {
     "start": "node api/analyze.js"
   },
   "dependencies": {
-    "music-metadata": "^8.0.3",
-    "formidable": "^3.7.0"
+    "formidable": "^2.1.2",
+    "node-fetch": "^3.3.2",
+    "tmp-promise": "^3.0.3",
+    "fluent-ffmpeg": "^2.1.2"
   },
-  "license": "MIT"
+  "engines": {
+    "node": "24.x"
+  }
 }
