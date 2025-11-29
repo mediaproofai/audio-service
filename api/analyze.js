@@ -1,5 +1,5 @@
 export const config = {
-  runtime: "nodejs20.x",   // Vercel Latest Stable Runtime
+  runtime: "nodejs20",   // Vercel Latest Stable Runtime
 };
 
 export default async function handler(req, res) {
