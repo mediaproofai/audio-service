@@ -1,5 +1,5 @@
 export const config = {
-  runtime: "nodejs",   // <-- FIXED
+  runtime: "nodejs",
 };
 
 export default async function handler(req, res) {
