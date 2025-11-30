@@ -1,10 +1,6 @@
 {
-  "name": "audio-service",
-  "version": "1.0.0",
-  "private": true,
+  "name": "mediaproof-<service-name>",
   "type": "module",
-  "engines": {
-    "node": "22.x"
-  },
+  "engines": { "node": "24.x" },
   "dependencies": {}
 }
