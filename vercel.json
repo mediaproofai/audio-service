@@ -1,8 +1,6 @@
 {
-  "version": 2,
-  "functions": {
-    "api/**/*.js": {
-      "maxDuration": 30
-    }
-  }
+  "version": 3,
+  "routes": [
+    { "src": "/api/analyze", "dest": "/api/analyze.js" }
+  ]
 }
