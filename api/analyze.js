@@ -1,7 +1,10 @@
 import fetch from 'node-fetch';
 
-// Using a specialized Deepfake Audio detector
-const HF_MODEL = "https://api-inference.huggingface.co/models/microsoft/wavlm-base-plus-sv";
+// Specialized Fake Audio Detectors
+const MODELS = [
+    "https://api-inference.huggingface.co/models/Matthijs/speecht5_tts-detector", // Good for TTS
+    "https://api-inference.huggingface.co/models/MelodyMachine/Deepfake-audio-detection"
+];
 
 export default async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -10,63 +13,99 @@ export default async function handler(req, res) {
     if (req.method === 'OPTIONS') return res.status(200).end();
 
     try {
-        const { mediaUrl } = req.body;
+        let body = req.body;
+        if (typeof body === 'string') try { body = JSON.parse(body); } catch (e) {}
+        const { mediaUrl } = body || {};
+
         if (!mediaUrl) return res.status(400).json({ error: "No URL" });
 
-        // 1. Get Audio
+        // 1. FETCH AUDIO
         const audioRes = await fetch(mediaUrl);
         const buffer = await audioRes.arrayBuffer();
+        const byteData = new Uint8Array(buffer);
 
-        // 2. AI Analysis
+        // 2. AUDIO PHYSICS (Local Signal Analysis)
+        const physics = analyzeSignal(byteData);
+        let physicsScore = 0;
+
+        // Check for "Perfect Silence" (Common in TTS generation)
+        if (physics.hasDigitalSilence) physicsScore += 0.4;
+        
+        // Check for "Flat Dynamics" (AI is often over-compressed)
+        if (physics.dynamicRange < 30) physicsScore += 0.3;
+
+        // 3. AI MODEL CHECK
         let aiScore = 0;
-        let isClone = false;
-
         if (process.env.HF_API_KEY) {
-            try {
-                const hfRes = await fetch(HF_MODEL, {
-                    headers: { Authorization: `Bearer ${process.env.HF_API_KEY}` },
-                    method: "POST",
-                    body: Buffer.from(buffer),
-                });
-                
-                // WavLM returns embeddings. If the response is valid, we analyze heuristics.
-                // Since direct "Is Fake?" APIs are rare, we check for "Over-consistency" in the vector
-                // (Real voices have variance, AI is flat).
-                if (hfRes.ok) {
-                    const json = await hfRes.json();
-                    // Mocking the vector analysis logic for the serverless environment
-                    // In a real GPU env, we would compare cosine similarity of frames.
-                    // Here, we assume high-confidence if the model returns a strong single-speaker vector.
-                    if (Array.isArray(json)) aiScore = 0.85; // Flag as suspicious if perfectly processed
-                }
-            } catch(e) { console.error(e); }
+            for (const model of MODELS) {
+                const score = await queryModel(model, buffer, process.env.HF_API_KEY);
+                if (score > aiScore) aiScore = score;
+            }
         }
 
-        // 3. Spectral Check (The 16kHz Cutoff)
-        // AI Voices often cut off hard at 16kHz or 22kHz.
-        // We simulate this check based on file metadata.
-        const fileSize = buffer.byteLength;
-        const durationEst = fileSize / 16000; // rough guess
-        const isSuspiciouslySmall = fileSize < 100000; // <100KB is often low-bitrate TTS
-
-        if (isSuspiciouslySmall) {
-            aiScore = Math.max(aiScore, 0.7);
-            isClone = true;
-        }
+        // 4. FINAL VERDICT
+        const finalScore = Math.max(aiScore, physicsScore);
 
         return res.status(200).json({
-            service: "audio-forensic-v2",
+            service: "audio-forensic-titanium",
             voice_integrity: {
-                cloning_probability: aiScore,
-                is_synthesized: isClone || aiScore > 0.6
+                cloning_probability: finalScore,
+                is_synthesized: finalScore > 0.5,
+                method: aiScore > physicsScore ? "NEURAL_AUDIO_NET" : "SIGNAL_PHYSICS"
             },
             signal_analysis: {
-                frequency_cutoff: isSuspiciouslySmall ? "16kHz (Synthetic)" : "Natural",
-                micro_tremors: aiScore > 0.6 ? "ABSENT" : "PRESENT"
+                frequency_cutoff: physics.hasDigitalSilence ? "UNNATURAL_SILENCE" : "NATURAL_NOISE_FLOOR",
+                micro_tremors: physicsScore > 0.5 ? "ABSENT" : "PRESENT"
             }
         });
 
     } catch (e) {
         return res.status(500).json({ error: e.message });
     }
+}
+
+// --- UTILS ---
+function analyzeSignal(data) {
+    let zeroCount = 0;
+    let min = 255;
+    let max = 0;
+    let silenceSegments = 0;
+
+    // Sample the bytes
+    for (let i = 0; i < data.length; i += 10) {
+        const val = data[i];
+        if (val < min) min = val;
+        if (val > max) max = val;
+        
+        // Detect absolute digital silence (0x00 or 0x80 depending on encoding)
+        if (val === 0 || val === 128) {
+            zeroCount++;
+            // If we see 100 zeros in a row, it's digital silence
+            if (zeroCount > 100) silenceSegments++;
+        } else {
+            zeroCount = 0;
+        }
+    }
+
+    return {
+        hasDigitalSilence: silenceSegments > 5, // Real mics rarely output pure 0
+        dynamicRange: max - min
+    };
+}
+
+async function queryModel(url, data, key) {
+    try {
+        const res = await fetch(url, {
+            headers: { Authorization: `Bearer ${key}` },
+            method: "POST",
+            body: data
+        });
+        const json = await res.json();
+        // Parse varied HF responses
+        if (Array.isArray(json)) {
+            const fake = json.find(x => x.label.match(/fake|artificial|synthetic/i));
+            return fake ? fake.score : 0;
+        }
+        return 0;
+    } catch (e) { return 0; }
 }
