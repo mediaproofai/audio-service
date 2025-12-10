@@ -2,9 +2,9 @@ import fetch from 'node-fetch';
 
 // ENSEMBLE OF AUDIO MODELS
 const MODELS = [
-    "https://api-inference.huggingface.co/models/Matthijs/speecht5_tts-detector",
-    "https://api-inference.huggingface.co/models/MelodyMachine/Deepfake-audio-detection",
-    "https://api-inference.huggingface.co/models/sanchit-gandhi/distilhubert-finetuned-gtzan" // Classification fallback
+    "https://router.huggingface.co/models/Matthijs/speecht5_tts-detector",
+    "https://router.huggingface.co/models/MelodyMachine/Deepfake-audio-detection",
+    "https://router.huggingface.co/models/sanchit-gandhi/distilhubert-finetuned-gtzan" // Classification fallback
 ];
 
 export default async function handler(req, res) {
